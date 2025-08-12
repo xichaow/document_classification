@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Debug Test</title>
+</head>
+<body>
+    <h1>Upload Debug Test</h1>
+    <input type="file" id="fileInput" accept=".pdf">
+    <button onclick="testUpload()">Test Upload</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = 'Please select a file first';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            console.log('Selected file:', file.name, file.size);
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const url = '/api/upload-document/';
+                console.log('Upload URL:', url);
+                
+                resultDiv.innerHTML = 'Uploading...';
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response URL:', response.url);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    resultDiv.innerHTML = `Error: ${response.status} - ${errorText}`;
+                    return;
+                }
+                
+                const result = await response.json();
+                console.log('Success:', result);
+                resultDiv.innerHTML = `Success: ${JSON.stringify(result, null, 2)}`;
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

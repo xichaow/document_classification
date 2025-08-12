@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: document-classification-system
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: HOST
+        value: 0.0.0.0
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_ACCESS_KEY_ID
+        sync: false  # Set this in Render dashboard
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false  # Set this in Render dashboard
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ENVIRONMENT
+        value: production

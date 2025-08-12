@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Evaluation - Document Classification System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-file-alt me-2"></i>Document Classification
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Upload</a>
+                <a class="nav-link active" href="/evaluation">Evaluation</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="fas fa-chart-line me-2"></i>Model Evaluation
+                </h1>
+                
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-4" id="evaluationTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="batch-test-tab" data-bs-toggle="tab" 
+                                data-bs-target="#batch-test" type="button" role="tab">
+                            <i class="fas fa-upload me-2"></i>Batch Test
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="results-tab" data-bs-toggle="tab" 
+                                data-bs-target="#results" type="button" role="tab">
+                            <i class="fas fa-chart-bar me-2"></i>Results
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" 
+                                data-bs-target="#history" type="button" role="tab">
+                            <i class="fas fa-history me-2"></i>History
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="evaluationTabContent">
+                    <!-- Batch Test Tab -->
+                    <div class="tab-pane fade show active" id="batch-test" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-flask me-2"></i>Upload Test Dataset
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="evaluation-form" enctype="multipart/form-data">
+                                            <div class="mb-3">
+                                                <label for="test-files" class="form-label">
+                                                    Test PDF Documents
+                                                </label>
+                                                <input type="file" class="form-control" id="test-files" 
+                                                       name="files" multiple accept=".pdf" required>
+                                                <div class="form-text">
+                                                    Select multiple PDF files for evaluation (max 20 files)
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="ground-truth" class="form-label">
+                                                    Ground Truth Labels (JSON)
+                                                </label>
+                                                <textarea class="form-control" id="ground-truth" rows="6" 
+                                                          placeholder='{"document1.pdf": "Bank Statement", "document2.pdf": "Payslip", "document3.pdf": "Government ID"}'></textarea>
+                                                <div class="form-text">
+                                                    JSON mapping of filenames to correct document types
+                                                </div>
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-primary" id="submit-evaluation">
+                                                <i class="fas fa-play me-2"></i>Start Evaluation
+                                            </button>
+                                            <button type="button" class="btn btn-secondary ms-2" onclick="testFormSubmission()">
+                                                <i class="fas fa-bug me-2"></i>Debug Test
+                                            </button>
+                                            <button type="button" class="btn btn-success ms-2" onclick="loadTestResults()">
+                                                <i class="fas fa-chart-line me-2"></i>Load Test Results
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Progress Section -->
+                                        <div id="evaluation-progress" class="mt-4" style="display: none;">
+                                            <h6>Evaluation Progress</h6>
+                                            <div class="progress mb-2">
+                                                <div id="eval-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                     role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <div id="eval-status" class="text-muted">Starting evaluation...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-info-circle me-2"></i>Supported Document Types
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled mb-0">
+                                            <li><i class="fas fa-id-card text-primary me-2"></i>Government ID</li>
+                                            <li><i class="fas fa-money-bill text-success me-2"></i>Payslip</li>
+                                            <li><i class="fas fa-university text-info me-2"></i>Bank Statement</li>
+                                            <li><i class="fas fa-briefcase text-warning me-2"></i>Employment Letter</li>
+                                            <li><i class="fas fa-bolt text-danger me-2"></i>Utility Bill</li>
+                                            <li><i class="fas fa-piggy-bank text-secondary me-2"></i>Savings Statement</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-question-circle me-2"></i>How to Use
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ol class="small mb-0">
+                                            <li>Upload multiple test PDF files</li>
+                                            <li>Provide ground truth labels in JSON format</li>
+                                            <li>Click "Start Evaluation" to begin batch testing</li>
+                                            <li>View detailed results and metrics</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Tab -->
+                    <div class="tab-pane fade" id="results" role="tabpanel">
+                        <div id="results-content">
+                            <div class="text-center py-5">
+                                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No evaluation results to display. Run a batch test first.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div class="tab-pane fade" id="history" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-history me-2"></i>Evaluation History
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="history-content">
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2">Loading evaluation history...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Skip evaluation.js for now and use inline functions -->
+    <!-- <script src="{{ url_for('static', path='/js/evaluation.js') }}"></script> -->
+    <script>
+        function testFormSubmission() {
+            console.log('Debug test clicked');
+            alert('Debug test: Check console for form status');
+            
+            const form = document.getElementById('evaluation-form');
+            const filesInput = document.getElementById('test-files');
+            const groundTruthInput = document.getElementById('ground-truth');
+            
+            console.log('Form found:', !!form);
+            console.log('Files input found:', !!filesInput);
+            console.log('Ground truth input found:', !!groundTruthInput);
+            console.log('Files selected:', filesInput?.files?.length || 0);
+            console.log('Ground truth value:', groundTruthInput?.value?.length || 0);
+            
+            // Test direct API call
+            fetch('/api/evaluations')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API test successful:', data);
+                    alert('API is working! Check console for details.');
+                })
+                .catch(error => {
+                    console.error('API test failed:', error);
+                    alert('API test failed: ' + error.message);
+                });
+        }
+        
+        function loadTestResults() {
+            console.log('Loading test results...');
+            
+            // Load the most recent successful evaluation
+            fetch('/api/evaluation/73f7b65d-3bc5-4207-b67a-7a835d6129f0')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Loaded test results:', data);
+                    
+                    // Display results directly without relying on class method
+                    displayEvaluationResults(data);
+                    
+                    // Switch to results tab
+                    const resultsTab = document.getElementById('results-tab');
+                    if (resultsTab) {
+                        const tabInstance = new bootstrap.Tab(resultsTab);
+                        tabInstance.show();
+                    }
+                    alert('Test results loaded! Check the Results tab.');
+                })
+                .catch(error => {
+                    console.error('Failed to load test results:', error);
+                    alert('Failed to load test results: ' + error.message);
+                });
+        }
+        
+        function displayEvaluationResults(results) {
+            const resultsContent = document.getElementById('results-content');
+            if (!resultsContent) {
+                console.error('Results content div not found');
+                return;
+            }
+
+            const metrics = results.metrics;
+            const summary = results.summary;
+
+            resultsContent.innerHTML = `
+                <div class="row">
+                    <!-- Overall Metrics -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-tachometer-alt me-2"></i>Overall Performance</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="h3 text-primary">${(metrics.overall_accuracy * 100).toFixed(1)}%</div>
+                                        <div class="small text-muted">Accuracy</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="h3 text-success">${(metrics.macro_avg.precision * 100).toFixed(1)}%</div>
+                                        <div class="small text-muted">Precision</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="h3 text-info">${(metrics.macro_avg.recall * 100).toFixed(1)}%</div>
+                                        <div class="small text-muted">Recall</div>
+                                    </div>
+                                </div>
+                                <div class="row text-center mt-3">
+                                    <div class="col-6">
+                                        <div class="h4 text-warning">${(metrics.macro_avg.f1_score * 100).toFixed(1)}%</div>
+                                        <div class="small text-muted">F1-Score</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 text-secondary">${summary.total_samples}</div>
+                                        <div class="small text-muted">Total Samples</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Per-Class Performance -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-list me-2"></i>Per-Class Performance</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Document Type</th>
+                                                <th>Precision</th>
+                                                <th>Recall</th>
+                                                <th>F1</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${metrics.per_class_metrics.filter(m => m.support > 0).map(metric => `
+                                                <tr>
+                                                    <td><strong>${metric.document_type}</strong></td>
+                                                    <td>${(metric.precision * 100).toFixed(1)}%</td>
+                                                    <td>${(metric.recall * 100).toFixed(1)}%</td>
+                                                    <td>${(metric.f1_score * 100).toFixed(1)}%</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-info-circle me-2"></i>Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Total Documents:</strong> ${summary.total_samples}</p>
+                                <p><strong>Correct Classifications:</strong> ${summary.total_correct}</p>
+                                <p><strong>Evaluation Date:</strong> ${new Date(metrics.timestamp).toLocaleString()}</p>
+                                <p><strong>Most Common True Label:</strong> ${summary.most_common_true_label}</p>
+                                <p><strong>Most Common Predicted:</strong> ${summary.most_common_predicted_label}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Results -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-file-alt me-2"></i>Detailed Classification Results</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Filename</th>
+                                                <th>True Label</th>
+                                                <th>Predicted</th>
+                                                <th>Confidence</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${results.classification_details.map(detail => `
+                                                <tr class="${detail.correct ? 'table-success' : 'table-danger'}">
+                                                    <td class="small">${detail.filename}</td>
+                                                    <td><span class="badge bg-primary">${detail.true_label}</span></td>
+                                                    <td><span class="badge bg-${detail.correct ? 'success' : 'danger'}">${detail.predicted_label}</span></td>
+                                                    <td>${(detail.confidence * 100).toFixed(1)}%</td>
+                                                    <td>${detail.correct ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

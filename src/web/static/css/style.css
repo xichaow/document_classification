@@ -1,0 +1,427 @@
+/* Document Classification System - Custom Styles */
+
+/* Root Variables */
+:root {
+    --primary-color: #0066cc;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-radius: 8px;
+    --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --box-shadow-lg: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --transition: all 0.15s ease-in-out;
+}
+
+/* Global Styles */
+body {
+    background-color: #f5f6fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+
+.display-5 {
+    font-weight: 700;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--box-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.navbar-nav .nav-link:hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Drop Zone Styles */
+#dropZone {
+    transition: var(--transition);
+    cursor: pointer;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#dropZone:hover {
+    border-color: var(--primary-color) !important;
+    background-color: rgba(0, 102, 204, 0.02);
+}
+
+#dropZone.drag-over {
+    border-color: var(--primary-color) !important;
+    background-color: rgba(0, 102, 204, 0.05);
+    transform: scale(1.02);
+}
+
+.drop-zone-overlay {
+    border-radius: var(--border-radius);
+    background: linear-gradient(45deg, rgba(0, 102, 204, 0.1), rgba(0, 102, 204, 0.2));
+    backdrop-filter: blur(2px);
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+    padding: 0.5rem 1.25rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary-color), #004499);
+    box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #004499, #0066cc);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 102, 204, 0.4);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+/* Progress Bars */
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 4px;
+}
+
+/* Badges */
+.badge {
+    border-radius: 20px;
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.alert-info {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: #0c5460;
+    border-left: 4px solid var(--info-color);
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border-left: 4px solid var(--success-color);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Tables */
+.table {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.table th {
+    background-color: var(--light-color);
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 102, 204, 0.02);
+}
+
+/* Status Badges */
+.status-badge {
+    font-size: 0.85rem;
+    padding: 0.35em 0.65em;
+    border-radius: 15px;
+    font-weight: 500;
+}
+
+.status-queued {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.status-processing {
+    background-color: rgba(23, 162, 184, 0.2);
+    color: #0c5460;
+}
+
+.status-completed {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #155724;
+}
+
+.status-failed {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #721c24;
+}
+
+/* Document Type Icons */
+.doc-type-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.doc-type-government-id { background-color: rgba(0, 102, 204, 0.1); color: var(--primary-color); }
+.doc-type-payslip { background-color: rgba(40, 167, 69, 0.1); color: var(--success-color); }
+.doc-type-bank-statement { background-color: rgba(23, 162, 184, 0.1); color: var(--info-color); }
+.doc-type-employment-letter { background-color: rgba(255, 193, 7, 0.1); color: #856404; }
+.doc-type-utility-bill { background-color: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
+.doc-type-savings-statement { background-color: rgba(108, 117, 125, 0.1); color: var(--secondary-color); }
+
+/* Confidence Score */
+.confidence-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e9ecef;
+    overflow: hidden;
+    position: relative;
+}
+
+.confidence-fill {
+    height: 100%;
+    transition: var(--transition);
+    border-radius: 3px;
+}
+
+.confidence-high { background-color: var(--success-color); }
+.confidence-medium { background-color: var(--warning-color); }
+.confidence-low { background-color: var(--danger-color); }
+
+/* Loading Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Spinners */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Tooltips */
+.tooltip {
+    font-size: 0.75rem;
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.modal-header {
+    background-color: var(--light-color);
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Footer */
+footer {
+    border-top: 1px solid #dee2e6;
+    margin-top: 3rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    #dropZone {
+        min-height: 150px;
+        padding: 2rem 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.625rem 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .table-responsive {
+        border: none;
+    }
+    
+    .table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    
+    .display-5 {
+        font-size: 1.75rem;
+    }
+    
+    .lead {
+        font-size: 1rem;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    footer,
+    .btn,
+    .modal,
+    .alert {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Focus States */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}

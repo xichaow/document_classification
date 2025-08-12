@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Evaluation - Standalone</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .card-header { background-color: #f8f9fa; font-weight: 600; }
+        .metric-card { transition: transform 0.2s; }
+        .metric-card:hover { transform: translateY(-2px); }
+        .confidence-high { color: #198754; }
+        .confidence-medium { color: #fd7e14; }
+        .confidence-low { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>Model Evaluation System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="http://localhost:8000/">Back to Upload</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="fas fa-microscope me-2"></i>Document Classification Evaluation
+                </h1>
+                
+                <!-- Control Panel -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Evaluation Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <form id="evaluation-form" enctype="multipart/form-data">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="test-files" class="form-label">Test PDF Documents</label>
+                                            <input type="file" class="form-control" id="test-files" 
+                                                   name="files" multiple accept=".pdf">
+                                            <div class="form-text">Select multiple PDF files (max 20)</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="ground-truth" class="form-label">Ground Truth Labels (JSON)</label>
+                                            <textarea class="form-control" id="ground-truth" rows="4" 
+                                                      placeholder='{"file1.pdf": "Bank Statement", "file2.pdf": "Payslip"}'></textarea>
+                                            <div class="form-text">JSON mapping of filenames to correct types</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-play me-2"></i>Start Evaluation
+                                        </button>
+                                        <button type="button" class="btn btn-success" onclick="loadExistingResults()">
+                                            <i class="fas fa-chart-bar me-2"></i>Load Example Results
+                                        </button>
+                                        <button type="button" class="btn btn-warning" onclick="testButtonFunction()">
+                                            <i class="fas fa-bug me-2"></i>Test Button
+                                        </button>
+                                        <button type="button" class="btn btn-info" onclick="testAPIConnection()">
+                                            <i class="fas fa-wifi me-2"></i>Test API
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Progress -->
+                                <div id="progress-section" class="mt-4" style="display: none;">
+                                    <h6>Evaluation Progress</h6>
+                                    <div class="progress mb-2">
+                                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                             role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <div id="progress-text" class="text-muted">Starting evaluation...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-info-circle me-2"></i>Supported Types</h6>
+                                        <div class="small">
+                                            <div><i class="fas fa-id-card text-primary me-1"></i> Government ID</div>
+                                            <div><i class="fas fa-money-bill text-success me-1"></i> Payslip</div>
+                                            <div><i class="fas fa-university text-info me-1"></i> Bank Statement</div>
+                                            <div><i class="fas fa-briefcase text-warning me-1"></i> Employment Letter</div>
+                                            <div><i class="fas fa-bolt text-danger me-1"></i> Utility Bill</div>
+                                            <div><i class="fas fa-piggy-bank text-secondary me-1"></i> Savings Statement</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Display -->
+                <div id="results-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Evaluation Results</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="results-content">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History section removed to prevent loading issues -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert container -->
+    <div id="alert-container" class="position-fixed" style="top: 20px; right: 20px; z-index: 1050; width: 300px;">
+        <!-- Alerts will be inserted here -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Standalone evaluation system - completely independent
+        class StandaloneEvaluationSystem {
+            constructor() {
+                this.currentEvaluationId = null;
+                this.statusInterval = null;
+                this.init();
+            }
+
+            init() {
+                console.log('Standalone evaluation system initialized');
+                
+                // Setup form handler
+                const form = document.getElementById('evaluation-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => this.handleSubmit(e));
+                }
+
+                // History loading removed to prevent issues
+                console.log('Evaluation system initialized without history loading');
+            }
+
+            async handleSubmit(event) {
+                event.preventDefault();
+                console.log('Form submitted');
+
+                const filesInput = document.getElementById('test-files');
+                const groundTruthInput = document.getElementById('ground-truth');
+
+                if (!filesInput.files.length) {
+                    this.showAlert('Please select test files', 'warning');
+                    return;
+                }
+
+                // Validate JSON
+                let groundTruth = {};
+                if (groundTruthInput.value.trim()) {
+                    try {
+                        groundTruth = JSON.parse(groundTruthInput.value);
+                    } catch (e) {
+                        this.showAlert('Invalid JSON format in ground truth labels', 'danger');
+                        return;
+                    }
+                }
+
+                // Prepare form data
+                const formData = new FormData();
+                for (let file of filesInput.files) {
+                    formData.append('files', file);
+                }
+                formData.append('labels', JSON.stringify(groundTruth));
+
+                this.showProgress(0, 'Starting evaluation...');
+
+                try {
+                    const response = await fetch('/api/evaluation/batch-test', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Evaluation failed');
+                    }
+
+                    const result = await response.json();
+                    this.currentEvaluationId = result.evaluation_id;
+                    
+                    this.showAlert(`Evaluation started! Processing ${result.successful_uploads} files...`, 'success');
+                    this.startProgressMonitoring();
+
+                } catch (error) {
+                    console.error('Evaluation error:', error);
+                    this.showAlert(`Evaluation failed: ${error.message}`, 'danger');
+                    this.hideProgress();
+                }
+            }
+
+            startProgressMonitoring() {
+                if (!this.currentEvaluationId) return;
+
+                this.statusInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(`/api/evaluation/${this.currentEvaluationId}/status`);
+                        if (!response.ok) return;
+
+                        const status = await response.json();
+                        const progress = status.task_progress;
+                        
+                        this.showProgress(
+                            progress.progress_percentage,
+                            `Processing: ${progress.completed}/${progress.total} documents`
+                        );
+
+                        if (status.overall_status === 'completed') {
+                            clearInterval(this.statusInterval);
+                            this.onEvaluationComplete();
+                        } else if (status.overall_status === 'failed') {
+                            clearInterval(this.statusInterval);
+                            this.onEvaluationFailed();
+                        }
+
+                    } catch (error) {
+                        console.error('Status check error:', error);
+                    }
+                }, 3000);
+            }
+
+            async onEvaluationComplete() {
+                this.showProgress(100, 'Evaluation completed! Loading results...');
+                
+                try {
+                    const response = await fetch(`/api/evaluation/${this.currentEvaluationId}`);
+                    if (!response.ok) throw new Error('Failed to load results');
+
+                    const results = await response.json();
+                    
+                    this.hideProgress();
+                    this.showAlert('Evaluation completed successfully!', 'success');
+                    this.displayResults(results);
+
+                } catch (error) {
+                    console.error('Results loading error:', error);
+                    this.showAlert('Failed to load evaluation results', 'danger');
+                    this.hideProgress();
+                }
+            }
+
+            onEvaluationFailed() {
+                this.hideProgress();
+                this.showAlert('Evaluation failed. Please try again.', 'danger');
+            }
+
+            displayResults(results) {
+                const resultsSection = document.getElementById('results-section');
+                const resultsContent = document.getElementById('results-content');
+                
+                if (!resultsContent) return;
+
+                const metrics = results.metrics;
+                const summary = results.summary;
+
+                resultsContent.innerHTML = `
+                    <div class="row">
+                        <!-- Overall Metrics -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card metric-card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-tachometer-alt me-2"></i>Overall Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="h2 text-primary">${(metrics.overall_accuracy * 100).toFixed(1)}%</div>
+                                            <div class="small text-muted">Accuracy</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="h2 text-success">${(metrics.macro_avg.f1_score * 100).toFixed(1)}%</div>
+                                            <div class="small text-muted">F1-Score</div>
+                                        </div>
+                                    </div>
+                                    <div class="row text-center mt-3">
+                                        <div class="col-6">
+                                            <div class="h5 text-info">${(metrics.macro_avg.precision * 100).toFixed(1)}%</div>
+                                            <div class="small text-muted">Precision</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="h5 text-warning">${(metrics.macro_avg.recall * 100).toFixed(1)}%</div>
+                                            <div class="small text-muted">Recall</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card metric-card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Total Documents:</strong></td>
+                                            <td>${summary.total_samples}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Correct Classifications:</strong></td>
+                                            <td class="text-success">${summary.total_correct}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Evaluation Date:</strong></td>
+                                            <td>${new Date(metrics.timestamp).toLocaleDateString()}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Most Common Label:</strong></td>
+                                            <td><span class="badge bg-primary">${summary.most_common_true_label}</span></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Per-Class Performance -->
+                        <div class="col-md-8 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-list me-2"></i>Per-Class Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Document Type</th>
+                                                    <th>Precision</th>
+                                                    <th>Recall</th>
+                                                    <th>F1-Score</th>
+                                                    <th>Support</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${metrics.per_class_metrics.filter(m => m.support > 0).map(metric => `
+                                                    <tr>
+                                                        <td><strong>${metric.document_type}</strong></td>
+                                                        <td><span class="badge bg-success">${(metric.precision * 100).toFixed(1)}%</span></td>
+                                                        <td><span class="badge bg-info">${(metric.recall * 100).toFixed(1)}%</span></td>
+                                                        <td><span class="badge bg-warning">${(metric.f1_score * 100).toFixed(1)}%</span></td>
+                                                        <td>${metric.support}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Results -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-file-alt me-2"></i>Document Results</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        ${results.classification_details.map(detail => `
+                                            <div class="border-bottom pb-2 mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="small">
+                                                        <strong>${detail.filename}</strong>
+                                                    </div>
+                                                    <div>
+                                                        ${detail.correct ? 
+                                                            '<i class="fas fa-check-circle text-success"></i>' : 
+                                                            '<i class="fas fa-times-circle text-danger"></i>'
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="small text-muted">
+                                                    Expected: <span class="badge bg-secondary">${detail.true_label}</span><br>
+                                                    Predicted: <span class="badge bg-${detail.correct ? 'success' : 'danger'}">${detail.predicted_label}</span><br>
+                                                    Confidence: ${(detail.confidence * 100).toFixed(1)}%
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                resultsSection.style.display = 'block';
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // History loading methods removed to prevent interference with main functionality
+
+            getStatusColor(status) {
+                switch (status) {
+                    case 'completed': return 'success';
+                    case 'processing': return 'primary';
+                    case 'failed': return 'danger';
+                    default: return 'secondary';
+                }
+            }
+
+            showProgress(percentage, message) {
+                const progressSection = document.getElementById('progress-section');
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+
+                progressSection.style.display = 'block';
+                progressBar.style.width = percentage + '%';
+                progressBar.setAttribute('aria-valuenow', percentage);
+                progressText.textContent = message;
+            }
+
+            hideProgress() {
+                const progressSection = document.getElementById('progress-section');
+                progressSection.style.display = 'none';
+            }
+
+            showAlert(message, type) {
+                const alertContainer = document.getElementById('alert-container');
+                const alertId = 'alert-' + Date.now();
+
+                const alertDiv = document.createElement('div');
+                alertDiv.id = alertId;
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${this.getAlertIcon(type)} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                alertContainer.appendChild(alertDiv);
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    const alert = document.getElementById(alertId);
+                    if (alert) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+
+            getAlertIcon(type) {
+                switch (type) {
+                    case 'success': return 'check-circle';
+                    case 'danger': return 'exclamation-triangle';
+                    case 'warning': return 'exclamation-circle';
+                    case 'info': return 'info-circle';
+                    default: return 'info-circle';
+                }
+            }
+        }
+
+        // Global functions
+        async function loadExistingResults() {
+            console.log('loadExistingResults() called');
+            evaluationSystem.showAlert('Loading example results...', 'info');
+            
+            try {
+                // First, get the list of evaluations to find the latest one
+                const listResponse = await fetch('/api/evaluations');
+                console.log('Evaluations list response:', listResponse.status);
+                
+                if (!listResponse.ok) throw new Error('Failed to get evaluations list');
+                
+                const listData = await listResponse.json();
+                console.log('Evaluations data:', listData);
+                
+                if (!listData.evaluations || listData.evaluations.length === 0) {
+                    console.log('No real evaluations found, showing mock results');
+                    showMockResults();
+                    return;
+                }
+                
+                // Get the latest completed evaluation
+                const latestEval = listData.evaluations
+                    .filter(e => e.status === 'completed')
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                
+                if (!latestEval) {
+                    console.log('No completed evaluations found, showing mock results');
+                    showMockResults();
+                    return;
+                }
+                
+                // Load the evaluation results
+                const response = await fetch(`/api/evaluation/${latestEval.evaluation_id}`);
+                if (!response.ok) throw new Error('Failed to load evaluation results');
+
+                const results = await response.json();
+                evaluationSystem.displayResults(results);
+                evaluationSystem.showAlert(`Example results loaded! Accuracy: ${(latestEval.overall_accuracy * 100).toFixed(1)}%`, 'success');
+
+            } catch (error) {
+                console.error('Failed to load example results:', error);
+                evaluationSystem.showAlert('Error loading results, showing demo instead', 'warning');
+                showMockResults();
+            }
+        }
+        
+        function showMockResults() {
+            console.log('Showing mock results');
+            
+            // Create mock evaluation results for demonstration
+            const mockResults = {
+                metrics: {
+                    overall_accuracy: 1.0,
+                    macro_avg: {
+                        precision: 1.0,
+                        recall: 1.0,
+                        f1_score: 1.0
+                    },
+                    per_class_metrics: [
+                        {
+                            document_type: "Bank Statement",
+                            precision: 1.0,
+                            recall: 1.0,
+                            f1_score: 1.0,
+                            support: 1
+                        },
+                        {
+                            document_type: "Payslip",
+                            precision: 1.0,
+                            recall: 1.0,
+                            f1_score: 1.0,
+                            support: 1
+                        }
+                    ],
+                    timestamp: new Date().toISOString()
+                },
+                summary: {
+                    total_samples: 2,
+                    total_correct: 2,
+                    most_common_true_label: "Bank Statement",
+                    most_common_predicted_label: "Bank Statement"
+                },
+                classification_details: [
+                    {
+                        filename: "test_bank_statement.pdf",
+                        true_label: "Bank Statement",
+                        predicted_label: "Bank Statement",
+                        confidence: 0.95,
+                        correct: true,
+                        processing_time: 2.1
+                    },
+                    {
+                        filename: "test_payslip.pdf",
+                        true_label: "Payslip",
+                        predicted_label: "Payslip",
+                        confidence: 0.98,
+                        correct: true,
+                        processing_time: 1.8
+                    }
+                ]
+            };
+            
+            evaluationSystem.displayResults(mockResults);
+            evaluationSystem.showAlert('Demo results loaded! Perfect 100% accuracy on 2 documents', 'success');
+        }
+
+        function testButtonFunction() {
+            console.log('Test button clicked!');
+            alert('Test button works! Check console for more info.');
+            evaluationSystem.showAlert('Test button clicked successfully!', 'info');
+        }
+
+        async function testAPIConnection() {
+            try {
+                const response = await fetch('/api/evaluations');
+                if (!response.ok) throw new Error('API connection failed');
+
+                const data = await response.json();
+                evaluationSystem.showAlert(`API connected! Found ${data.total_evaluations} evaluations.`, 'success');
+
+            } catch (error) {
+                console.error('API test failed:', error);
+                evaluationSystem.showAlert('API connection failed: ' + error.message, 'danger');
+            }
+        }
+
+        // Initialize the standalone evaluation system
+        const evaluationSystem = new StandaloneEvaluationSystem();
+        
+        console.log('Standalone evaluation system loaded successfully');
+    </script>
+</body>
+</html>

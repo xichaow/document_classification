@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evaluation Debug Test</title>
+    <script>
+    function testEvaluation() {
+        console.log('Testing evaluation...');
+        
+        // Test API directly
+        fetch('/api/evaluations')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Evaluations:', data);
+                document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            });
+    }
+    </script>
+</head>
+<body>
+    <h1>Evaluation API Test</h1>
+    <button onclick="testEvaluation()">Test API</button>
+    <pre id="result">Click button to test...</pre>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Modal Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>✅ Modal Removed - Progress Bar Only</h2>
+        <p>This demonstrates the user experience with ONLY the progress bar (no annoying modal popup).</p>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Upload Simulation</h5>
+            </div>
+            <div class="card-body">
+                <button id="testUpload" class="btn btn-primary mb-3">🧪 Test Upload Process</button>
+                
+                <!-- Progress Bar (exactly like in upload.html) -->
+                <div id="progressContainer" class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted" id="progressLabel">Processing...</span>
+                        <span id="progressText" class="text-primary">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div id="result" class="mt-3 alert alert-info">
+                    Click the test button to see the progress bar in action (no modal popup!)
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h5>✅ Benefits of Removing Modal</h5>
+            <ul class="list-group">
+                <li class="list-group-item">✅ No blocking popup that can get stuck</li>
+                <li class="list-group-item">✅ Progress bar shows clear status updates</li>
+                <li class="list-group-item">✅ Page remains fully interactive</li>
+                <li class="list-group-item">✅ Better user experience</li>
+                <li class="list-group-item">✅ No JavaScript modal management complexity</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Progress functions (copied from upload.js)
+        function updateProgress(percent, message = '') {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressLabel = document.getElementById('progressLabel');
+            
+            progressBar.style.width = percent + '%';
+            progressBar.setAttribute('aria-valuenow', percent);
+            progressText.textContent = percent + '%';
+            
+            if (message) {
+                progressLabel.textContent = message;
+            }
+        }
+        
+        function getProgressMessage(status) {
+            const messageMap = {
+                'queued': 'Queued for processing...',
+                'processing': 'Analyzing document content...',
+                'completed': 'Classification completed!',
+                'failed': 'Classification failed'
+            };
+            return messageMap[status] || 'Processing...';
+        }
+        
+        function updateResult(message) {
+            document.getElementById('result').innerHTML = message;
+        }
+        
+        // Simulate the upload process
+        async function simulateUpload() {
+            updateResult('🔄 Starting upload simulation...');
+            
+            // Step 1: Upload
+            updateProgress(5, 'Uploading document...');
+            updateResult('📤 Uploading file...');
+            await sleep(1000);
+            
+            // Step 2: Queued
+            updateProgress(10, 'Document uploaded, processing...');
+            updateResult('✅ File uploaded successfully! Processing...');
+            await sleep(1000);
+            
+            // Step 3: Processing
+            updateProgress(50, 'Analyzing document content...');
+            updateResult('🧠 Analyzing document with AWS Textract and Bedrock...');
+            await sleep(2000);
+            
+            // Step 4: Nearly complete
+            updateProgress(90, 'Classification almost complete...');
+            updateResult('🎯 Finalizing classification results...');
+            await sleep(1000);
+            
+            // Step 5: Complete
+            updateProgress(100, 'Classification completed!');
+            updateResult('🎉 <strong>Success!</strong> Document classified as <strong>Bank Statement</strong> with 85% confidence.<br><br>✅ <strong>No modal popup!</strong> ✅ <strong>Page stays interactive!</strong>');
+            
+            // Hide progress after completion
+            setTimeout(() => {
+                document.getElementById('progressContainer').style.display = 'none';
+            }, 3000);
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('testUpload').addEventListener('click', simulateUpload);
+            
+            // Show that no modal exists
+            const modal = document.getElementById('loadingModal');
+            if (!modal) {
+                console.log('✅ Confirmed: No loading modal exists on page');
+            }
+        });
+    </script>
+</body>
+</html>
