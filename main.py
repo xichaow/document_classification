@@ -47,16 +47,9 @@ async def evaluation_page(request: Request):
     return templates.TemplateResponse("evaluation.html", {"request": request})
 
 @app.get("/evaluation-standalone", response_class=HTMLResponse)
-async def evaluation_standalone():
+async def evaluation_standalone(request: Request):
     """Standalone evaluation page - completely independent."""
-    with open("evaluation_standalone.html", "r") as f:
-        return HTMLResponse(content=f.read())
-
-@app.get("/evaluation-debug", response_class=HTMLResponse)
-async def evaluation_debug():
-    """Debug evaluation page for testing."""
-    with open("evaluation_debug.html", "r") as f:
-        return HTMLResponse(content=f.read())
+    return templates.TemplateResponse("evaluation_standalone.html", {"request": request})
 
 @app.get("/health")
 async def health_check():

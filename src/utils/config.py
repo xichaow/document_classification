@@ -37,8 +37,8 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE: int = Field(
         default=20971520, description="Maximum file size in bytes"  # 20MB
     )
-    UPLOAD_DIR: str = Field(default="uploads", description="Upload directory")
-    RESULTS_DIR: str = Field(default="results", description="Results directory")
+    UPLOAD_DIR: str = Field(default="data/uploads", description="Upload directory")
+    RESULTS_DIR: str = Field(default="data/results", description="Results directory")
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
 
     # Web Interface

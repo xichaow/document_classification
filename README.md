@@ -82,15 +82,20 @@ Access at: `/evaluation-standalone`
 ```
 document_classification_homeloan/
 ├── src/
-│   ├── api/                 # FastAPI routes and endpoints
-│   ├── classification/      # Document classification logic
-│   ├── evaluation/          # Model evaluation system
-│   ├── utils/              # Configuration and utilities
-│   └── web/                # Templates and static files
-├── main.py                 # Application entry point
-├── requirements.txt        # Python dependencies
-├── render.yaml            # Render deployment config
-└── DEPLOYMENT.md          # Deployment guide
+│   ├── api/                    # FastAPI routes and endpoints
+│   ├── classification/         # Document classification logic
+│   ├── evaluation/            # Model evaluation system
+│   ├── utils/                 # Configuration and utilities
+│   └── web/                   # Web interface
+│       ├── templates/         # HTML templates
+│       └── static/            # CSS, JS, assets
+├── data/                      # Data storage
+│   ├── uploads/              # Uploaded files
+│   └── results/              # Classification results
+├── main.py                   # Application entry point
+├── requirements.txt          # Python dependencies
+├── render.yaml              # Render deployment config
+└── README.md                # This file
 ```
 
 ## 🛠️ Technology Stack

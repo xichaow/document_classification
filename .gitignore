@@ -77,8 +77,10 @@ Thumbs.db
 .env.production.local
 
 # Application specific
-uploads/
-results/
+data/uploads/*
+data/results/*
+!data/uploads/.gitkeep
+!data/results/.gitkeep
 temp/
 logs/
 *.log
@@ -102,3 +104,8 @@ dmypy.json
 
 # profiling data
 .prof
+
+#others
+DEPLOYMENT.md
+PRPs/
+.claude/
