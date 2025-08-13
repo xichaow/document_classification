@@ -1,6 +1,6 @@
 # Deployment Guide - Render Cloud
 
-This guide explains how to deploy the Document Classification System to Render cloud platform.
+This guide explains how to deploy the Document Classification System to Render cloud platform using native Python deployment.
 
 ## Prerequisites
 
@@ -8,14 +8,13 @@ This guide explains how to deploy the Document Classification System to Render c
 2. **GitHub Repository**: Your code should be in a GitHub repository
 3. **AWS Credentials** (optional): For full functionality with AWS Textract and Bedrock
 
-## Deployment Options
+## Deployment Steps
 
-### Option 1: Automatic Deployment via render.yaml (Recommended)
+### Automatic Deployment via render.yaml (Recommended)
 
 1. **Push to GitHub**: Ensure your code is in a GitHub repository with all the deployment files:
    - `requirements.txt`
    - `render.yaml`
-   - `Dockerfile` (optional)
 
 2. **Connect to Render**:
    - Go to [render.com](https://render.com) and sign in
@@ -34,7 +33,7 @@ This guide explains how to deploy the Document Classification System to Render c
 
 4. **Deploy**: Render will automatically use the `render.yaml` configuration and deploy your service.
 
-### Option 2: Manual Web Service Setup
+### Alternative: Manual Web Service Setup
 
 1. **Create Web Service**:
    - Go to Render dashboard
